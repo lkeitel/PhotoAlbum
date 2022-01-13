@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text.Json;
@@ -76,8 +77,16 @@ namespace PhotoAlbum.Tests
         [TestMethod]
         public void GetPhotosShouldGetListOfPhotosFromClient()
         {
-            var results = _sut.GetPhotos().Result;
+            var results = _sut.GetPhotos(null).Result;
             results.Should().BeEquivalentTo(expectedResults);
+        }
+        
+        [TestMethod]
+        public void GetPhotosWithAlbumModifierShouldGetListOfPhotosFromAlbum()
+        {
+            //TODO make test work - currently can't test because httpclient isn't wrapped
+            var results = _sut.GetPhotos(1).Result;
+            mockHttpMessageHandler.Verify(x => x);
         }
     }
 }

@@ -20,9 +20,11 @@ namespace PhotoAlbum
         {
             _client = client;
         }
-        public async Task<List<Photos>> GetPhotos()
+        public async Task<List<Photos>> GetPhotos(int? albumId)
         {
-            var result = await _client.GetAsync("https://jsonplaceholder.typicode.com/photos");
+            var albumQuery =  albumId == null ? "": $"?albumId={albumId}";
+            var url = "https://jsonplaceholder.typicode.com/photos" + albumQuery; 
+            var result = await _client.GetAsync(url);
             var content = result.Content.ReadAsStringAsync().Result;
             return JsonSerializer.Deserialize<List<Photos>>(content);
         }
