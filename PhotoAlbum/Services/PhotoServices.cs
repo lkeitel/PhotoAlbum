@@ -10,13 +10,13 @@ namespace PhotoAlbum
 {
     public class PhotoServices
     {
-        private HttpClient _client;
-        public PhotoServices()
+        private IApiClient _client;
+        public PhotoServices() : this(new ApiClient())
         {
-            _client = new HttpClient();
+            
         }
 
-        public PhotoServices(HttpClient client)
+        public PhotoServices(IApiClient client)
         {
             _client = client;
         }
@@ -24,9 +24,7 @@ namespace PhotoAlbum
         {
             var albumQuery =  albumId == null ? "": $"?albumId={albumId}";
             var url = "https://jsonplaceholder.typicode.com/photos" + albumQuery; 
-            var result = await _client.GetAsync(url);
-            var content = result.Content.ReadAsStringAsync().Result;
-            return JsonSerializer.Deserialize<List<Photos>>(content);
+            return await _client.Get<List<Photos>>(url);
         }
 
     }

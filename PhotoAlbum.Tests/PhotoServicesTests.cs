@@ -18,7 +18,7 @@ namespace PhotoAlbum.Tests
     {
         private PhotoServices _sut;
         private List<Photos> expectedResults;
-        private Mock<HttpMessageHandler> mockHttpMessageHandler;
+        private Mock<IApiClient> mockApiClient;
 
         [TestInitialize]
         public void BeforeEach()
@@ -51,27 +51,11 @@ namespace PhotoAlbum.Tests
                     Title = "photo 3"
                 }
             };
-            
-            mockHttpMessageHandler = new Mock<HttpMessageHandler>();
-            
-            mockHttpMessageHandler.Protected()
-                .Setup<Task<HttpResponseMessage>>(
-                    "SendAsync",
-                    ItExpr.IsAny<HttpRequestMessage>(),
-                    ItExpr.IsAny<CancellationToken>()
-                )
-                .ReturnsAsync((HttpRequestMessage request, CancellationToken token) =>
-                {
-                    HttpResponseMessage response = new HttpResponseMessage()
-                    {
-                        StatusCode = HttpStatusCode.OK,
-                        Content = new StringContent(JsonSerializer.Serialize(expectedResults))
-                    };
 
-                    return response;
-                });
-            HttpClient client = new HttpClient(mockHttpMessageHandler.Object);
-            _sut = new PhotoServices(client);
+            mockApiClient = new Mock<IApiClient>();
+
+            mockApiClient.Setup(x => x.Get<List<Photos>>(It.IsAny<string>())).Returns(Task.FromResult(expectedResults));
+            _sut = new PhotoServices(mockApiClient.Object);
         }
         
         [TestMethod]
@@ -79,14 +63,18 @@ namespace PhotoAlbum.Tests
         {
             var results = _sut.GetPhotos(null).Result;
             results.Should().BeEquivalentTo(expectedResults);
+            mockApiClient.Verify(x => x.Get<List<Photos>>("https://jsonplaceholder.typicode.com/photos"));
         }
         
         [TestMethod]
         public void GetPhotosWithAlbumModifierShouldGetListOfPhotosFromAlbum()
         {
-            //TODO make test work - currently can't test because httpclient isn't wrapped
-            var results = _sut.GetPhotos(1).Result;
-            mockHttpMessageHandler.Verify(x => x);
+            var expectedAlbumId = 1;
+            var filteredResults = expectedResults.Where(x => x.AlbumId == expectedAlbumId).ToList();
+            mockApiClient.Setup(x => x.Get<List<Photos>>($"https://jsonplaceholder.typicode.com/photos?albumId={expectedAlbumId}")).Returns(Task.FromResult(filteredResults));
+            var results = _sut.GetPhotos(expectedAlbumId).Result;
+            results.Should().BeEquivalentTo(filteredResults);
+            mockApiClient.Verify(x => x.Get<List<Photos>>($"https://jsonplaceholder.typicode.com/photos?albumId={expectedAlbumId}"));
         }
     }
 }
