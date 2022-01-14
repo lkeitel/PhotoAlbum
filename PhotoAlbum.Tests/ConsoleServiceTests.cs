@@ -75,4 +75,38 @@ public class ConsoleServiceTests
         _sut.StartApp();
         _mockedPhotoServices.Verify(x => x.GetPhotos(1), Times.Once);
     }
+
+    [TestMethod]
+    public void WhenUserEntersQThenExitAndDontCallGetPhotos()
+    {
+        _mockedConsoleIO.Setup(x => x.ReadLine()).Returns("Q");
+        _sut.StartApp();
+        _mockedPhotoServices.Verify(x => x.GetPhotos(It.IsAny<int>()), Times.Never);
+    }
+    
+    [TestMethod]
+    public void WhenUserEntersADifferentNumberThenGetPhotosIsCalledWithAThatNumber()
+    {
+        _mockedConsoleIO.Setup(x => x.ReadLine()).Returns("45");
+        _sut.StartApp();
+        _mockedPhotoServices.Verify(x => x.GetPhotos(45), Times.Once);
+    }
+    
+    [TestMethod]
+    public void WhenUserEntersAnInvalidNumberInputThenPromptForANewInput()
+    {
+        _mockedConsoleIO.Setup(x => x.ReadLine()).Returns("BadInput");
+        _sut.StartApp();
+        _mockedPhotoServices.Verify(x => x.GetPhotos(It.IsAny<int>()), Times.Never);
+        _mockedConsoleIO.Verify(x =>x.WriteLine("Invalid Input. Try Another command, or press Q to Quit:"), Times.Once);
+    }
+
+    [TestMethod]
+    public void WhenUserEntersANumberTheAlbumRequestIsPrintedAndAPromptForAnotherRequestIsPrinted()
+    {
+        _sut.StartApp();
+        _mockedPhotoServices.Verify(x => x.GetPhotos(1), Times.Once);
+        _mockedConsoleIO.Verify(x => x.WriteLine("photo-album 1"));
+        _mockedConsoleIO.Verify(x => x.WriteLine("Enter another album Id or press Q to Quit:"));
+    }
 }
