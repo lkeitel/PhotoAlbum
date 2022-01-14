@@ -4,7 +4,12 @@ using PhotoAlbum.Models;
 
 namespace PhotoAlbum
 {
-    public class PhotoServices
+    public interface IPhotoServices
+    {
+        Task<List<Photos>> GetPhotos(int? albumId);
+    }
+
+    public class PhotoServices : IPhotoServices
     {
         private IApiClient _client;
         public PhotoServices() : this(new ApiClient())
@@ -16,6 +21,7 @@ namespace PhotoAlbum
         {
             _client = client;
         }
+        
         public async Task<List<Photos>> GetPhotos(int? albumId)
         {
             var albumQuery =  albumId == null ? "": $"?albumId={albumId}";
