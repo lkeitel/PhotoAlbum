@@ -20,7 +20,7 @@ public class PhotoServicesTests
     {
         expectedResults = new List<Photos>()
         {
-            new Photos()
+            new()
             {
                 Id = 1,
                 AlbumId = 1,
@@ -29,7 +29,7 @@ public class PhotoServicesTests
                 Title = "photo 1"
                     
             },
-            new Photos()
+            new()
             {
                 Id = 2,
                 AlbumId = 1,
@@ -37,7 +37,7 @@ public class PhotoServicesTests
                 thumbnailURL = "www.testthumbnail.com",
                 Title = "photo 2"
             },
-            new Photos()
+            new()
             {
                 Id = 3,
                 AlbumId = 2,

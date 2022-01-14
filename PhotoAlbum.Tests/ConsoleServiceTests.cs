@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using PhotoAlbum.Models;
@@ -20,7 +19,7 @@ public class ConsoleServiceTests
     {
         expectedResults = new List<Photos>()
         {
-            new Photos()
+            new()
             {
                 Id = 1,
                 AlbumId = 1,
@@ -29,7 +28,7 @@ public class ConsoleServiceTests
                 Title = "photo 1"
                     
             },
-            new Photos()
+            new()
             {
                 Id = 2,
                 AlbumId = 1,
@@ -37,7 +36,7 @@ public class ConsoleServiceTests
                 thumbnailURL = "www.testthumbnail.com",
                 Title = "photo 2"
             },
-            new Photos()
+            new()
             {
                 Id = 3,
                 AlbumId = 2,
@@ -50,16 +49,10 @@ public class ConsoleServiceTests
         _mockedPhotoServices = new Mock<IPhotoServices>();
         _mockedConsoleIO = new Mock<IConsoleIO>();
         _mockedPhotoServices.Setup(x => x.GetPhotos(It.IsAny<int>())).ReturnsAsync(expectedResults);
-        _mockedConsoleIO.Setup(x => x.ReadLine()).Returns(userInput.ToString);
+        _mockedConsoleIO.SetupSequence(x => x.ReadLine())
+            .Returns(userInput.ToString)
+            .Returns("Q");
         _sut = new ConsoleService(_mockedPhotoServices.Object, _mockedConsoleIO.Object);
-    }
-
-    [TestMethod]
-    public void ConsoleServiceGetPhotosShouldCallPhotoServiceToGetPhotos()
-    {
-        _sut.GetPhotos(1);
-        
-        _mockedPhotoServices.Verify(x => x.GetPhotos(It.IsAny<int>()), Times.Once);
     }
 
     [TestMethod]
@@ -87,7 +80,10 @@ public class ConsoleServiceTests
     [TestMethod]
     public void WhenUserEntersADifferentNumberThenGetPhotosIsCalledWithAThatNumber()
     {
-        _mockedConsoleIO.Setup(x => x.ReadLine()).Returns("45");
+        _mockedConsoleIO.SetupSequence(x => x.ReadLine())
+            .Returns("45")
+            .Returns("q");
+        
         _sut.StartApp();
         _mockedPhotoServices.Verify(x => x.GetPhotos(45), Times.Once);
     }
@@ -95,7 +91,9 @@ public class ConsoleServiceTests
     [TestMethod]
     public void WhenUserEntersAnInvalidNumberInputThenPromptForANewInput()
     {
-        _mockedConsoleIO.Setup(x => x.ReadLine()).Returns("BadInput");
+        _mockedConsoleIO.SetupSequence(x => x.ReadLine())
+            .Returns("BadInput")
+            .Returns("q");
         _sut.StartApp();
         _mockedPhotoServices.Verify(x => x.GetPhotos(It.IsAny<int>()), Times.Never);
         _mockedConsoleIO.Verify(x =>x.WriteLine("Invalid Input. Try Another command, or press Q to Quit:"), Times.Once);
@@ -108,5 +106,15 @@ public class ConsoleServiceTests
         _mockedPhotoServices.Verify(x => x.GetPhotos(1), Times.Once);
         _mockedConsoleIO.Verify(x => x.WriteLine("photo-album 1"));
         _mockedConsoleIO.Verify(x => x.WriteLine("Enter another album Id or press Q to Quit:"));
+    }
+    [TestMethod]
+    public void ForEachPhotoInAlbumRequestedTitleInfoIsReturned()
+    {
+        _sut.StartApp();
+        foreach (var photo in expectedResults)
+        {
+            _mockedConsoleIO.Verify(x => x.WriteLine($"[{photo.Id}] {photo.Title}"));  
+        }
+        
     }
 }

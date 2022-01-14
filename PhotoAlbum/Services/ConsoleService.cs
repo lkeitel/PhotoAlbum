@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.Design;
-using System.Security.Cryptography.X509Certificates;
-using PhotoAlbum.Models;
-
 namespace PhotoAlbum;
 
 public class ConsoleService
@@ -20,32 +14,35 @@ public class ConsoleService
         _consoleIo = consoleIo;
     }
 
-    public List<Photos> GetPhotos(int? albumId)
-    {
-        return _photoServices.GetPhotos(albumId).Result;
-    }
-
     public void StartApp()
     {
         _consoleIo.WriteLine("Enter an Album Id to retrieve, or press Q to quit: ");
-        var input = _consoleIo.ReadLine();
-        int albumRequest;
-         
-        if (input.ToLower() == "q")
+        while (true)
         {
-            return;
+            var input = _consoleIo.ReadLine();
+
+            if (input.ToLower() == "q")
+            {
+                return;
+            }
+
+            if (int.TryParse(input, out var albumRequest))
+            {
+                _consoleIo.WriteLine($"photo-album {albumRequest}");
+                var photos = _photoServices.GetPhotos(albumRequest).Result;
+                foreach (var photo in photos)
+                {
+                    _consoleIo.WriteLine($"[{photo.Id}] {photo.Title}");
+                }
+
+                _consoleIo.WriteLine("Enter another album Id or press Q to Quit:");
+            }
+            else
+            {
+                _consoleIo.WriteLine("Invalid Input. Try Another command, or press Q to Quit:");
+            }
         }
-        else if (int.TryParse(input, out albumRequest))
-        {
-            _consoleIo.WriteLine($"photo-album {albumRequest}");
-            _photoServices.GetPhotos(albumRequest);
-            _consoleIo.WriteLine("Enter another album Id or press Q to Quit:");
-        }
-        else
-        {
-            _consoleIo.WriteLine("Invalid Input. Try Another command, or press Q to Quit:");
-        }
-            
+
     }
 
 }
